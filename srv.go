@@ -23,7 +23,7 @@ type Server struct {
   Env         string
   CertFile    string
   KeyFile     string
-  callbacks   []func
+  callbacks   []func()error
 }
 
 
@@ -51,7 +51,7 @@ func NewServer() *Server {
     ServeMux:   mux,
     PidFile:    DefaultPidFile,
     Env:        env,
-    callbacks:  make([]func, 0),
+    callbacks:  make([]func()error, 0),
   }
 
   return s
@@ -59,31 +59,31 @@ func NewServer() *Server {
 
 
 func NewServerFromConfig(config_file string, env ...string) (*Server, error) {
-  cfg, err := ReadConfig(config_file)
-  if err != nil { return nil, err }
-
   s := NewServer()
 
   if len(env) > 0 && env[0] != "" { s.Env = env[0] }
 
-  pidFile, err := cfg.String(s.Env, "pidFile")
+  cfg, err := ReadConfig(config_file, s.Env)
+  if err != nil { return nil, err }
+
+  pidFile, err := cfg.String("pidFile")
   if err != nil { s.PidFile = pidFile }
 
-  readTimeout, _ := cfg.String(s.Env, "readTimeout")
+  readTimeout, _ := cfg.String("readTimeout")
   rt, err := time.ParseDuration(readTimeout)
   if err != nil { s.ReadTimeout = rt }
 
-  writeTimeout, _ := cfg.String(s.Env, "writeTimeout")
+  writeTimeout, _ := cfg.String("writeTimeout")
   wt, err := time.ParseDuration(writeTimeout)
   if err != nil { s.WriteTimeout = wt }
 
-  maxHeaderBytes, err := cfg.String(s.Env, "maxHeaderBytes")
+  maxHeaderBytes, err := cfg.Int("maxHeaderBytes")
   if err != nil { s.MaxHeaderBytes = maxHeaderBytes }
 
-  certFile, err := cfg.String(s.Env, "certFile")
+  certFile, err := cfg.String("certFile")
   if err != nil { s.CertFile = certFile }
 
-  keyFile, err := cfg.String(s.Env, "keyFile")
+  keyFile, err := cfg.String("keyFile")
   if err != nil { s.KeyFile = keyFile }
 
   return s, nil
@@ -154,7 +154,7 @@ func (s Server) WritePidFile() error {
     return mkerr("PID file %s already exists. Please delete it and try again.", s.PidFile) }
 
   content := []byte( fmt.Sprintf("%d", os.Getpid()) )
-  err = ioutil.WriteFile(path, content, 0666)
+  err = ioutil.WriteFile(s.PidFile, content, 0666)
   return err
 }
 
@@ -171,9 +171,9 @@ func (s *Server) StopOther() error {
 }
 
 
-func (s *Server) OnStop(fn func) {
+func (s *Server) OnStop(fn func()error) {
   if len(s.callbacks) == 0 {
-    s.callbacks = []func{} }
+    s.callbacks = []func()error{} }
   s.callbacks = append(s.callbacks, fn)
 }
 
@@ -195,7 +195,7 @@ func (s *Server) finish() {
 }
 
 
-func handleInterrupt(fn func()) {
+func handleInterrupt() {
   c := make(chan os.Signal)
   signal.Notify(c, os.Interrupt)
 
@@ -235,8 +235,7 @@ func StopServerAt(pid_file string) error {
   if err != nil {
     return mkerr("Could not stop server. PID %d was unresponsive.", pid) }
 
-  var i = 0
-  for proc, err = os.FindProcess(pid); err == nil && i < 20 {
+  for i := 0; err == nil && i < 20; _, err = os.FindProcess(pid) {
     time.Sleep(100 * time.Millisecond)
   }
 

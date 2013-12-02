@@ -1,4 +1,4 @@
-package srv
+package gosrv
 
 import (
   "github.com/robfig/config"
@@ -12,7 +12,7 @@ type Config struct {
 
 
 func ReadConfig(file, env string) (*Config, error) {
-  cfg, err := config.ReadDefault(config_file)
+  cfg, err := config.ReadDefault(file)
   if err != nil { return nil, err }
 
   c := &Config{cfg, env}
@@ -20,16 +20,16 @@ func ReadConfig(file, env string) (*Config, error) {
 }
 
 
-func (c Config) String(name string) string {
+func (c Config) String(name string) (string, error) {
   return c.Config.String(c.Env, name)
 }
 
 
-func (c Config) Int(name string) int {
+func (c Config) Int(name string) (int, error) {
   return c.Config.Int(c.Env, name)
 }
 
 
-func (c Config) Bool(name string) bool {
+func (c Config) Bool(name string) (bool, error) {
   return c.Config.Bool(c.Env, name)
 }

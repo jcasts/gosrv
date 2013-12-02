@@ -1,6 +1,6 @@
 package gosrv
 
-include (
+import (
   "fmt"
   "flag"
   "os"
@@ -27,15 +27,15 @@ func parseFlag() *parsedFlag {
 
 
 func setFlag(f *parsedFlag) {
-  flag.StringVar(f.addr, "p", DefaultAddr, "\tServer address")
-  flag.StringVar(f.pidFile, "pid", DefaultPidFile, "\tServer PID File")
-  flag.StringVar(f.configFile, "c", DefaultConfigFile, "\tConfig file")
+  flag.StringVar(&f.addr, "p", DefaultAddr, "\tServer address")
+  flag.StringVar(&f.pidFile, "pid", DefaultPidFile, "\tServer PID File")
+  flag.StringVar(&f.configFile, "c", DefaultConfigFile, "\tConfig file")
 
   if !ForceProdEnv {
-    flag.StringVar(f.env, "e", DefaultEnv, "\tEnvironment to run server in") }
+    flag.StringVar(&f.env, "e", DefaultEnv, "\tEnvironment to run server in") }
 
-  flag.BoolVar(f.stopServer, "stop", false, "\tStop running server and exit")
-  flag.BoolVar(f.restartServer, "restart", false, "\tStop running server and boot")
+  flag.BoolVar(&f.stopServer, "stop", false, "\tStop running server and exit")
+  flag.BoolVar(&f.restartServer, "restart", false, "\tStop running server and boot")
 }
 
 
