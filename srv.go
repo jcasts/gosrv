@@ -69,11 +69,13 @@ func NewServerFromConfig(config_file string, env ...string) (*Server, error) {
   pidFile, err := cfg.String(s.Env, "pidFile")
   if err != nil { s.PidFile = pidFile }
 
-  readTimeout, err := cfg.String(s.Env, "readTimeout")
-  if err != nil { s.ReadTimeout = readTimeout }
+  readTimeout, _ := cfg.String(s.Env, "readTimeout")
+  rt, err := time.ParseDuration(readTimeout)
+  if err != nil { s.ReadTimeout = rt }
 
-  writeTimeout, err := cfg.String(s.Env, "writeTimeout")
-  if err != nil { s.WriteTimeout = writeTimeout }
+  writeTimeout, _ := cfg.String(s.Env, "writeTimeout")
+  wt, err := time.ParseDuration(writeTimeout)
+  if err != nil { s.WriteTimeout = wt }
 
   maxHeaderBytes, err := cfg.String(s.Env, "maxHeaderBytes")
   if err != nil { s.MaxHeaderBytes = maxHeaderBytes }
