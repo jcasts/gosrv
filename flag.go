@@ -14,34 +14,35 @@ type parsedFlag struct {
   addr          string
   configFile    string
   pidFile       string
+  flagSet       *flag.FlagSet
 }
 
 
-func parseFlag() *parsedFlag {
-  f := &parsedFlag{}
-  setFlag(f)
-  flag.Usage = flagUsage
-  flag.Parse()
-  return f
+func parseFlag(args []string) *parsedFlag {
+  f := parsedFlag{}
+  f.setFlag(args[0])
+  f.flagSet.Parse(args[1:])
+  return &f
 }
 
 
-func setFlag(f *parsedFlag) {
-  flag.StringVar(&f.addr, "p", DefaultAddr, "\tServer address")
-  flag.StringVar(&f.pidFile, "pid", DefaultPidFile, "\tServer PID File")
-  flag.StringVar(&f.configFile, "c", DefaultConfigFile, "\tConfig file")
+func (f *parsedFlag) setFlag(name string) {
+  flagset := flag.NewFlagSet(name, flag.ExitOnError)
+  flagset.StringVar(&f.addr, "p", DefaultAddr, "\tServer address")
+  flagset.StringVar(&f.pidFile, "pid", DefaultPidFile, "\tServer PID File")
+  flagset.StringVar(&f.configFile, "c", DefaultConfigFile, "\tConfig file")
 
   if !ForceProdEnv {
-    flag.StringVar(&f.env, "e", DefaultEnv, "\tEnvironment to run server in") }
+    flagset.StringVar(&f.env, "e", DefaultEnv, "\tEnvironment to run server in") }
 
-  flag.BoolVar(&f.stopServer, "stop", false, "\tStop running server and exit")
-  flag.BoolVar(&f.restartServer, "restart", false, "\tStop running server and boot")
+  flagset.BoolVar(&f.stopServer, "stop", false, "\tStop running server and exit")
+  flagset.BoolVar(&f.restartServer, "restart", false, "\tStop running server and boot")
+
+  flagset.Usage = func() {
+    fmt.Fprintf(os.Stderr, "Usage: %s [options]\n", name)
+    flagset.PrintDefaults()
+    os.Exit(2)
+  }
+
+  f.flagSet = flagset
 }
-
-
-func flagUsage() {
-  fmt.Fprintf(os.Stderr, "Usage: %s [options]\n", os.Args[0])
-  flag.PrintDefaults()
-  os.Exit(2)
-}
-

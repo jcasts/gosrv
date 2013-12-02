@@ -5,11 +5,6 @@ import (
 )
 
 
-func testAssertEqual(t *testing.T, v1, v2 interface{}) {
-  if v1 != v2 { t.Fatalf("Value should be %v but was %v", v1, v2) }
-}
-
-
 func TestReadConfig(t *testing.T) {
   c, err := ReadConfig("testdata/server.cfg", "dev")
   if err != nil { t.Fatal( err ) }

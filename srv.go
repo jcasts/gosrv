@@ -91,7 +91,7 @@ func NewServerFromConfig(config_file string, env ...string) (*Server, error) {
 
 
 func NewServerFromFlag() *Server {
-  f := parseFlag()
+  f := parseFlag(os.Args)
 
   env := ""
   if !ForceProdEnv { env = f.env }
