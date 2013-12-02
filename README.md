@@ -62,6 +62,13 @@ func main() {
     // Do something when ^C is received, before shut-down
   })
 
+  s.HandleFunc("/", handler)
+
   panic( s.ListenAndServe() )
+}
+
+
+func handler(w http.ResponseWriter, r *http.Request) {
+  w.Write("Hello World!")
 }
 ```
