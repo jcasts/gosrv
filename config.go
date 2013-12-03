@@ -11,6 +11,11 @@ type Config struct {
 }
 
 
+func NewConfig(env string) *Config {
+  return &Config{&config.Config{}, env}
+}
+
+
 func ReadConfig(file, env string) (*Config, error) {
   cfg, err := config.ReadDefault(file)
   if err != nil { return nil, err }

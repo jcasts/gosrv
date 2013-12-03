@@ -25,7 +25,6 @@ func TestParseFlag(t *testing.T) {
 func TestParseFlagForceProd(t *testing.T) {
   oldForceProd := ForceProdEnv
   defer func(){ ForceProdEnv = oldForceProd }()
-
   ForceProdEnv = true
 
   args := []string{"test","-p",":7000","-pid","path/to/server.pid",
