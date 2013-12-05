@@ -62,6 +62,9 @@ func TestStopProcessAt(t *testing.T) {
   err := StopProcessAt(pidfile)
   if err != nil { t.Fatal( err ) }
 
+  _, err = os.Stat(pidfile)
+  if err == nil { t.Fatal( "Test server should have removed its pid file" ) }
+
   filename := filepath.Join(pwd, testOnStopFile)
   _, err = os.Stat(filename)
   if err != nil { t.Fatal( "Test server should have written to "+testOnStopFile ) }
