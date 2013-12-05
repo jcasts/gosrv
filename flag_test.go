@@ -17,6 +17,7 @@ func TestParseFlag(t *testing.T) {
   testAssertEqual(t, "path/to/server.pid", fl.pidFile)
   testAssertEqual(t, "path/to/server.cfg", fl.configFile)
 
+  testAssertEqual(t, false, fl.daemonizeServer)
   testAssertEqual(t, false, fl.stopServer)
   testAssertEqual(t, false, fl.restartServer)
 }

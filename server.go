@@ -115,6 +115,11 @@ func NewServerFromFlag(args ...string) (*Server, error) {
     if f.stopServer { os.Exit(0) }
   }
 
+  if f.restartServer || f.daemonizeServer {
+    daemonize(args)
+    os.Exit(0)
+  }
+
   return s, nil
 }
 

@@ -8,13 +8,14 @@ import (
 
 
 type parsedFlag struct {
-  stopServer    bool
-  restartServer bool
-  env           string
-  addr          string
-  configFile    string
-  pidFile       string
-  flagSet       *flag.FlagSet
+  daemonizeServer bool
+  stopServer      bool
+  restartServer   bool
+  env             string
+  addr            string
+  configFile      string
+  pidFile         string
+  flagSet         *flag.FlagSet
 }
 
 
@@ -35,6 +36,7 @@ func (f *parsedFlag) setFlag(name string) {
   if !ForceProdEnv {
     flagset.StringVar(&f.env, "e", DefaultEnv, "\tEnvironment to run server in") }
 
+  flagset.BoolVar(&f.daemonizeServer, "d", false, "\tRun server as daemon")
   flagset.BoolVar(&f.stopServer, "stop", false, "\tStop running server and exit")
   flagset.BoolVar(&f.restartServer, "restart", false, "\tStop running server and boot")
 

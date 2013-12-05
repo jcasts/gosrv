@@ -14,6 +14,7 @@ Usage: myserver [options]
 -pid: "myserver.pid" Server PID File
 -c: "myserver.cfg"  Config file
 -e: "dev" Environment to run server in
+-d: false Run server as daemon
 -stop: false  Stop running server and exit
 -restart: false Stop running server and boot
 ```
