@@ -4,6 +4,7 @@ import (
   "net/http"
   "fmt"
   "os"
+  "io/ioutil"
   "time"
   "../../gosrv"
 )
@@ -21,6 +22,7 @@ func main() {
   })
 
   s.OnStop(func()error{
+    ioutil.WriteFile("done.txt", []byte("main finished"), 0666)
     fmt.Println("Sleeping for 1s")
     time.Sleep(1 * time.Second)
     return nil

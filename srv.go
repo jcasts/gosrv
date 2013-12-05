@@ -43,7 +43,7 @@ func handleInterrupt() {
 }
 
 
-func StopServerAt(pid_file string) error {
+func StopProcessAt(pid_file string) error {
   _, err := os.Stat(pid_file)
   if err != nil {
     return mkerr("Could not stop server. PID file %s does not exists.", pid_file)}
@@ -99,13 +99,14 @@ func daemonize(args []string) {
   }
 
   procName := filepath.Base(procArgs[0])
+  procArgs[0] = procName
   procAttr := &os.ProcAttr{
     Dir: DefaultAppDir,
     Env: os.Environ(),
     Files: []*os.File{ os.Stdin, os.Stdout, os.Stderr },
   }
 
-  fmt.Println("Starting daemon...")
+  fmt.Println("Starting daemon "+procName+"...")
   _, err := os.StartProcess(procName, procArgs, procAttr)
   if err != nil { exit(1, err.Error()) }
 
@@ -119,6 +120,7 @@ func setDefaults(args []string) {
 
   DefaultAppDir     = filepath.Dir(path)
   DefaultAppName    = filepath.Base(args[0])
+
   DefaultPidFile    = filepath.Join(DefaultAppDir, DefaultAppName + ".pid")
   DefaultConfigFile = filepath.Join(DefaultAppDir, DefaultAppName + ".cfg")
 }

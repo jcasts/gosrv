@@ -41,7 +41,6 @@ func NewServer(env ...string) *Server {
   }
 
   s.ServeMux  = mux
-  s.PidFile   = DefaultPidFile
   s.Config    = NewConfig(s.Env)
   s.callbacks = make([]func()error, 0)
 
@@ -170,7 +169,7 @@ func (s Server) DeletePidFile() error {
 
 
 func (s *Server) StopOther() error {
-  return StopServerAt(s.PidFile)
+  return StopProcessAt(s.PidFile)
 }
 
 
