@@ -1,4 +1,3 @@
-
 package gosrv
 
 import (
@@ -22,14 +21,14 @@ var DefaultAppDir     = "./"
 var DefaultAppName    = "server"
 
 var srvChan = make(chan Server, 1)
+var sigChan = make(chan os.Signal)
 
 
 func handleInterrupt() {
-  c := make(chan os.Signal)
-  signal.Notify(c, os.Interrupt)
+  signal.Notify(sigChan, os.Interrupt)
 
   go func() {
-    for sig := range c {
+    for sig := range sigChan {
       fmt.Printf("\nCaptured %v, exiting..\n", sig)
 
       max := len(srvChan)
@@ -86,18 +85,34 @@ func exit(status int, msg string, obj ...interface{}) {
 }
 
 
-func setDefaults() {
-  path, err := filepath.Abs(os.Args[0])
+func daemonize(args []string) {
+  procName := filepath.Base(args[0])
+  procAttr := &os.ProcAttr{
+    Dir: DefaultAppDir,
+    Env: os.Environ(),
+    Files: []*os.File{ os.Stdin },
+  }
+
+  fmt.Println("Starting daemon...")
+  _, err := os.StartProcess(procName, args, procAttr)
+  if err != nil { exit(1, err.Error()) }
+
+  exit(0, "Done!")
+}
+
+
+func setDefaults(args []string) {
+  path, err := filepath.Abs(args[0])
   if err != nil { panic(err) }
 
   DefaultAppDir     = filepath.Dir(path)
-  DefaultAppName    = filepath.Base(os.Args[0])
+  DefaultAppName    = filepath.Base(args[0])
   DefaultPidFile    = filepath.Join(DefaultAppDir, DefaultAppName + ".pid")
   DefaultConfigFile = filepath.Join(DefaultAppDir, DefaultAppName + ".cfg")
 }
 
 
 func init() {
-  setDefaults()
+  setDefaults(os.Args)
   handleInterrupt()
 }
