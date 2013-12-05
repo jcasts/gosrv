@@ -51,6 +51,7 @@ package main
 include (
   "fmt"
   "gosrv"
+  "net/http"
 )
 
 
@@ -71,6 +72,6 @@ func main() {
 
 
 func handler(w http.ResponseWriter, r *http.Request) {
-  w.Write([]byte("Hello World!"))
+  w.Write([]byte("Hello World!\n"))
 }
 ```
