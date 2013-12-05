@@ -7,7 +7,7 @@ import (
 
 
 func TestParseFlag(t *testing.T) {
-  args := []string{"test","-p",":7000","-pid","path/to/server.pid",
+  args := []string{"test","-a",":7000","-pid","path/to/server.pid",
             "-c","path/to/server.cfg","-e","stage"}
 
   fl := parseFlag(args)
@@ -27,7 +27,7 @@ func TestParseFlagForceProd(t *testing.T) {
   defer func(){ ForceProdEnv = oldForceProd }()
   ForceProdEnv = true
 
-  args := []string{"test","-p",":7000","-pid","path/to/server.pid",
+  args := []string{"test","-a",":7000","-pid","path/to/server.pid",
             "-c","path/to/server.cfg"}
 
   fl := parseFlag(args)

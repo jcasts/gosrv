@@ -28,7 +28,7 @@ func parseFlag(args []string) *parsedFlag {
 
 func (f *parsedFlag) setFlag(name string) {
   flagset := flag.NewFlagSet(name, flag.ExitOnError)
-  flagset.StringVar(&f.addr, "p", DefaultAddr, "\tServer address")
+  flagset.StringVar(&f.addr, "a", DefaultAddr, "\tServer address")
   flagset.StringVar(&f.pidFile, "pid", DefaultPidFile, "\tServer PID File")
   flagset.StringVar(&f.configFile, "c", DefaultConfigFile, "\tConfig file")
 

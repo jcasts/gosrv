@@ -62,7 +62,7 @@ func TestNewServerFromConfigEnv(t *testing.T) {
 
 func TestNewServerFromFlag(t *testing.T) {
   s, err := NewServerFromFlag(
-              "test","-p",":7000","-pid","path/to/server.pid","-e","stage")
+              "test","-a",":7000","-pid","path/to/server.pid","-e","stage")
   if err != nil { t.Fatal( err ) }
 
   testAssertEqual(t, "stage", s.Env)
@@ -74,7 +74,7 @@ func TestNewServerFromFlag(t *testing.T) {
 
 func TestNewServerFromFlagAndConfig(t *testing.T) {
   s, err := NewServerFromFlag(
-              "test","-p",":7000","-c","testdata/server.cfg","-e","prod")
+              "test","-a",":7000","-c","testdata/server.cfg","-e","prod")
   if err != nil { t.Fatal( err ) }
 
   testAssertEqual(t, "prod", s.Env)
