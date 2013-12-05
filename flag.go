@@ -38,7 +38,7 @@ func (f *parsedFlag) setFlag(name string) {
 
   flagset.BoolVar(&f.daemonizeServer, "d", false, "\tRun server as daemon")
   flagset.BoolVar(&f.stopServer, "stop", false, "\tStop running server and exit")
-  flagset.BoolVar(&f.restartServer, "restart", false, "\tStop running server and boot")
+  flagset.BoolVar(&f.restartServer, "restart", false, "\tStop running server and boot daemon")
 
   flagset.Usage = func() {
     fmt.Fprintf(os.Stderr, "Usage: %s [options]\n", name)

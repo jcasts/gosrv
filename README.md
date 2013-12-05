@@ -10,13 +10,13 @@ $ myserver -h
 
 Usage: myserver [options]
 
--p: ":9000"  Server address
+-a: ":9000"  Server address
 -pid: "myserver.pid" Server PID File
 -c: "myserver.cfg"  Config file
 -e: "dev" Environment to run server in
 -d: false Run server as daemon
 -stop: false  Stop running server and exit
--restart: false Stop running server and boot
+-restart: false Stop running server and boot daemon
 ```
 
 
