@@ -21,7 +21,7 @@ type parsedFlag struct {
 
 func parseFlag(args []string) *parsedFlag {
   f := parsedFlag{}
-  f.setFlag(args[0])
+  f.setFlag(DefaultAppName)
   f.flagSet.Parse(args[1:])
   return &f
 }
