@@ -24,6 +24,7 @@ Usage: myserver [options]
 
 ```ini
 [DEFAULT]
+addr: ":9000"
 pidFile: path/to/file.pid
 readTimeout: 5s
 writeTimeout: 500ms
