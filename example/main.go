@@ -26,5 +26,5 @@ func main() {
     return nil
   })
 
-  s.ListenAndServe()
+  panic( s.ListenAndServe() )
 }
