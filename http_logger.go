@@ -9,32 +9,31 @@ import (
   "fmt"
 )
 
-type LogValueMapper func(res *Response, req *http.Request)string;
+type LogValueMapper func(*Response, *http.Request)string;
 
 var LogValueMap = map[string]LogValueMapper {
-  "%h": lvRemoteAddr,
-  "%H": lvProtocol,
-  "%D": lvDuration,
-  "%t": lvRequestTime,
-  "%m": lvRequestMethod,
-  "%b": lvResponseBytesClean,
-  "%B": lvResponseBytes,
-  "%u": lvRemoteUser,
-  "%U": lvRequestPath,
-  "%r": lvRequestFirstLine,
-  "%>s": lvResponseStatus,
-  "%s": lvResponseStatus,
-  "%{Referer}i": lvReferer,
-  "%{User-agent}i": lvUserAgent,
-  "%{User-Agent}i": lvUserAgent,
+  "$RemoteAddr": lvRemoteAddr,
+  "$Protocol": lvProtocol,
+  "$RequestTime": lvDuration,
+  "$Time": lvRequestTime,
+  "$RequestMethod": lvRequestMethod,
+  "$BodyBytes": lvResponseBytes,
+  "$RemoteUser": lvRemoteUser,
+  "$RequestUri": lvRequestUri,
+  "$RequestPath": lvRequestPath,
+  "$Request": lvRequestFirstLine,
+  "$Status": lvResponseStatus,
+  "$HttpReferer": lvReferer,
+  "$HttpUserAgent": lvUserAgent,
 }
 
-var DefaultLogFormat = "%h - %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-agent}i\""
+var DefaultLogFormat =
+  "$RemoteAddr - $RemoteUser $Time \"$Request\" $Status $BodyBytes \"$HttpReferer\" \"$HttpUserAgent\""
 var DefaultTimeFormat = "[02/Jan/2006:15:04:05 -0700]"
 
 
 type HttpLogger struct {
-  logFormat  string
+  logFormat   string
   TimeFormat  string
   keys        []string
   Writer      io.Writer
@@ -111,12 +110,7 @@ func lvRequestMethod(res *Response, req *http.Request) string {
 
 
 func lvResponseBytes(res *Response, req *http.Request) string {
-  return fmt.Sprintf("%d", res.ContentLength())
-}
-
-
-func lvResponseBytesClean(res *Response, req *http.Request) string {
-  b := lvResponseBytes(res, req)
+  b := fmt.Sprintf("%d", res.ContentLength())
   if b == "0" { b = "-" }
   return b
 }
@@ -134,13 +128,18 @@ func lvRemoteUser(res *Response, req *http.Request) string {
 
 
 func lvRequestPath(res *Response, req *http.Request) string {
+  return req.URL.Path
+}
+
+
+func lvRequestUri(res *Response, req *http.Request) string {
   return req.RequestURI
 }
 
 
 func lvRequestFirstLine(res *Response, req *http.Request) string {
   return lvRequestMethod(res, req) + " " +
-          lvRequestPath(res, req) + " " +
+          lvRequestUri(res, req) + " " +
           lvProtocol(res, req)
 }
 
