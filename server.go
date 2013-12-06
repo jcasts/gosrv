@@ -63,6 +63,7 @@ func New(env ...string) *Server {
 //  * writeTimeout    Server write timeout (default to net/http default)
 //  * maxHeaderBytes  Max header bytes allowed (default to net/http default)
 //  * logFormat       Log format to write in (default to DefaultLogFormat)
+//  * logFile         File to write request logs to (default stdout)
 //  * timeFormat      Time format for logs (default to DefaultTimeFormat)
 //  * certFile        TLS cert file (default none)
 //  * keyFile         TLS key file (default none)
@@ -97,6 +98,13 @@ func NewFromConfig(config_file string, env ...string) (*Server, error) {
 
   timeFormat, err := cfg.String("timeFormat")
   if err == nil { s.Logger.SetTimeFormat(timeFormat) }
+
+  logFile, err := cfg.String("logFile")
+  if err == nil {
+    f, err := os.OpenFile(logFile, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0660)
+    if err != nil { return s, err }
+    s.Logger.SetWriter(f)
+  }
 
   certFile, err := cfg.String("certFile")
   if err == nil { s.CertFile = certFile }
@@ -217,6 +225,11 @@ func (s *Server) OnStop(fn func()error) {
 
 func (s *Server) prepare() error {
   s.callbacks = append(s.callbacks, s.DeletePidFile)
+
+  if l, ok := s.Logger.(*httpLogger); ok {
+    if w, ok := l.writer.(*os.File); ok {
+      s.callbacks = append(s.callbacks, w.Close) }}
+
   err := s.WritePidFile()
   if err != nil { return err }
 

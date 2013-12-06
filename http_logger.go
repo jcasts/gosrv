@@ -35,6 +35,7 @@ var DefaultTimeFormat = "[02/Jan/2006:15:04:05 -0700]"
 type HttpLogger interface {
   SetLogFormat(format string)
   SetTimeFormat(time_format string)
+  SetWriter(wr io.Writer)
   Log(t time.Time, wr http.ResponseWriter, req *http.Request)
 }
 
@@ -74,6 +75,11 @@ func (l *httpLogger) SetLogFormat(log_format string) {
 
 func (l *httpLogger) SetTimeFormat(time_format string) {
   l.timeFormat = time_format
+}
+
+
+func (l *httpLogger) SetWriter(wr io.Writer) {
+  l.writer = wr
 }
 
 
