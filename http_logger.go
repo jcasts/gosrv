@@ -9,9 +9,9 @@ import (
   "fmt"
 )
 
-type LogValueMapper func(time.Time, http.ResponseWriter, *http.Request)string;
+type LogValueFunc func(time.Time, http.ResponseWriter, *http.Request)string;
 
-var LogValueMap = map[string]LogValueMapper {
+var LogValueMap = map[string]LogValueFunc {
   "$RemoteAddr": lvRemoteAddr,
   "$Protocol": lvProtocol,
   "$RequestTime": lvDuration,
@@ -33,6 +33,7 @@ var DefaultTimeFormat = "[02/Jan/2006:15:04:05 -0700]"
 
 
 type HttpLogger interface {
+  io.Writer
   SetLogFormat(format string)
   SetTimeFormat(time_format string)
   SetWriter(wr io.Writer)
@@ -83,6 +84,11 @@ func (l *httpLogger) SetWriter(wr io.Writer) {
 }
 
 
+func (l *httpLogger) Write(bytes []byte) (int, error) {
+  return l.writer.Write(bytes)
+}
+
+
 func (l *httpLogger) Log(t time.Time, wr http.ResponseWriter, req *http.Request) {
   repl := []string{}
 
@@ -93,7 +99,7 @@ func (l *httpLogger) Log(t time.Time, wr http.ResponseWriter, req *http.Request)
   r := strings.NewReplacer(repl...)
   line := r.Replace(l.logFormat) + "\n"
 
-  l.writer.Write([]byte(line))
+  l.Write([]byte(line))
 }
 
 
