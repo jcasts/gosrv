@@ -34,15 +34,16 @@ var DefaultTimeFormat = "[02/Jan/2006:15:04:05 -0700]"
 
 type HttpLogger interface {
   SetLogFormat(format string)
+  SetTimeFormat(time_format string)
   Log(t time.Time, wr http.ResponseWriter, req *http.Request)
 }
 
 
 type httpLogger struct {
   logFormat   string
-  TimeFormat  string
+  timeFormat  string
   keys        []string
-  Writer      io.Writer
+  writer      io.Writer
 }
 
 
@@ -53,7 +54,7 @@ func NewHttpLogger(wr io.Writer, formats ...string) HttpLogger {
   if len(formats) > 0 { log_format = formats[0] }
   if len(formats) > 1 { time_format = formats[1] }
 
-  l := &httpLogger{TimeFormat: time_format, Writer: wr}
+  l := &httpLogger{timeFormat: time_format, writer: wr}
   l.SetLogFormat(log_format)
   return l
 }
@@ -71,6 +72,10 @@ func (l *httpLogger) SetLogFormat(log_format string) {
 }
 
 
+func (l *httpLogger) SetTimeFormat(time_format string) {
+  l.timeFormat = time_format
+}
+
 
 func (l *httpLogger) Log(t time.Time, wr http.ResponseWriter, req *http.Request) {
   repl := []string{}
@@ -82,7 +87,7 @@ func (l *httpLogger) Log(t time.Time, wr http.ResponseWriter, req *http.Request)
   r := strings.NewReplacer(repl...)
   line := r.Replace(l.logFormat) + "\n"
 
-  l.Writer.Write([]byte(line))
+  l.writer.Write([]byte(line))
 }
 
 
