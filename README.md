@@ -32,6 +32,9 @@ writeTimeout: 500ms
 certFile: path/to/myserver.cert
 keyFile: path/to/myserver.key
 
+timeFormat=(02/01/2006 15:04:05)
+logFormat=$RemoteAddr - $RemoteUser $Time "$Request" $Status $BodyBytes
+
 customThing: foobar
 
 [dev]
