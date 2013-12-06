@@ -59,7 +59,7 @@ func TestStopProcessAt(t *testing.T) {
   pwd, _ := os.Getwd()
 
   pidfile := filepath.Join(pwd, testDaemon+".pid")
-  err := StopProcessAt(pidfile)
+  err := stopProcessAt(pidfile)
   if err != nil { t.Fatal( err ) }
 
   _, err = os.Stat(pidfile)

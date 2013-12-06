@@ -1,3 +1,5 @@
+// GoSrv is a thin wrapper around GoLang's HTTP server, to provide basic
+// command-line functionality, and env-specific configuration.
 package gosrv
 
 import (
@@ -13,9 +15,11 @@ import (
 )
 
 
+// Setting ForceProdEnv to true disables the -e command line argument
+// and runs the app with the "prod" environment by default.
+var ForceProdEnv      = false
 var DefaultAddr       = ":9000"
 var DefaultEnv        = "dev"
-var ForceProdEnv      = false
 var DefaultPidFile    = "server.pid"
 var DefaultConfigFile = "server.cfg"
 var DefaultAppDir     = "./"
@@ -43,7 +47,7 @@ func handleInterrupt() {
 }
 
 
-func StopProcessAt(pid_file string) error {
+func stopProcessAt(pid_file string) error {
   _, err := os.Stat(pid_file)
   if err != nil {
     return mkerr("Could not stop server. PID file %s does not exists.", pid_file)}

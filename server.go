@@ -10,6 +10,9 @@ import (
 )
 
 
+// The gosrv server is a wrapper around Go's http server and http handler.
+// It handles Interrupt signals with callbacks before shutdown, and can be
+// constructed via a config file, command line options, or both.
 type Server struct {
   *http.Server
   *http.ServeMux
@@ -22,6 +25,8 @@ type Server struct {
 }
 
 
+// Creates a new Server instance with an optional environment name.
+// The default environment is "dev".
 func NewServer(env ...string) *Server {
   s := &Server{PidFile: DefaultPidFile}
 
@@ -48,6 +53,8 @@ func NewServer(env ...string) *Server {
 }
 
 
+// Create a new Server from a config file with an optional environment name.
+// The default environment is "dev".
 func NewServerFromConfig(config_file string, env ...string) (*Server, error) {
   s := NewServer()
 
@@ -84,6 +91,9 @@ func NewServerFromConfig(config_file string, env ...string) (*Server, error) {
 }
 
 
+// Reads command line arguments to create a new Server instance. Uses a
+// config file if provided to the -c option. Command line arguments
+// override config values.
 func NewServerFromFlag(args ...string) (*Server, error) {
   var s *Server
   var err error
@@ -123,6 +133,7 @@ func NewServerFromFlag(args ...string) (*Server, error) {
 }
 
 
+// Starts the server and listens on the given server.Addr.
 func (s *Server) ListenAndServe() error {
   err := s.prepare()
   if err != nil { return err }
@@ -135,6 +146,7 @@ func (s *Server) ListenAndServe() error {
 }
 
 
+// Starts the server with the given TLS files and listens on server.Addr.
 func (s *Server) ListenAndServeTLS(certFile, keyFile string) error {
   err := s.prepare()
   if err != nil { return err }
@@ -142,6 +154,7 @@ func (s *Server) ListenAndServeTLS(certFile, keyFile string) error {
 }
 
 
+// Starts the server for the given listener.
 func (s *Server) Serve(l net.Listener) error {
   err := s.prepare()
   if err != nil { return err }
@@ -149,6 +162,7 @@ func (s *Server) Serve(l net.Listener) error {
 }
 
 
+// Writes the server's pidfile. Typically called at server Listen time.
 func (s Server) WritePidFile() error {
   _, err := os.Stat(s.PidFile)
 
@@ -161,6 +175,8 @@ func (s Server) WritePidFile() error {
 }
 
 
+// Removes the server's pidfile. The pidfile is automatically deleted when
+// an interrupt signal is received.
 func (s Server) DeletePidFile() error {
   _, err := os.Stat(s.PidFile)
   if err != nil { return nil }
@@ -168,11 +184,13 @@ func (s Server) DeletePidFile() error {
 }
 
 
+// Stop the server running at server.PidFile.
 func (s *Server) StopOther() error {
-  return StopProcessAt(s.PidFile)
+  return stopProcessAt(s.PidFile)
 }
 
 
+// Add a callback for when the server shuts down.
 func (s *Server) OnStop(fn func()error) {
   if len(s.callbacks) == 0 {
     s.callbacks = []func()error{} }
