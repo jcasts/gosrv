@@ -15,7 +15,7 @@ import (
 // constructed via a config file, command line options, or both.
 type Server struct {
   *http.Server
-  *http.ServeMux
+  *Mux
   Config      *Config
   PidFile     string
   Env         string
@@ -38,14 +38,14 @@ func NewServer(env ...string) *Server {
     s.Env = DefaultEnv
   }
 
-  mux := http.NewServeMux()
+  mux := NewMux()
 
   s.Server = &http.Server{
     Addr:     DefaultAddr,
     Handler:  mux,
   }
 
-  s.ServeMux  = mux
+  s.Mux  = mux
   s.Config    = NewConfig(s.Env)
   s.callbacks = make([]func()error, 0)
 
