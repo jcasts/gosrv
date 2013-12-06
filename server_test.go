@@ -6,26 +6,26 @@ import (
 )
 
 
-func TestNewServer(t *testing.T) {
-  s := NewServer()
+func TestNew(t *testing.T) {
+  s := New()
   testAssertEqual(t, "dev", s.Env)
   testAssertEqual(t, ":9000", s.Addr)
 }
 
 
-func TestNewServerForceProd(t *testing.T) {
+func TestNewForceProd(t *testing.T) {
   oldForceProd := ForceProdEnv
   defer func(){ ForceProdEnv = oldForceProd }()
   ForceProdEnv = true
 
-  s := NewServer()
+  s := New()
   testAssertEqual(t, "prod", s.Env)
   testAssertEqual(t, ":9000", s.Addr)
 }
 
 
-func TestNewServerFromConfig(t *testing.T) {
-  s, err := NewServerFromConfig("testdata/server.cfg")
+func TestNewFromConfig(t *testing.T) {
+  s, err := NewFromConfig("testdata/server.cfg")
   if err != nil { t.Fatal( err ) }
 
   testAssertEqual(t, "dev", s.Env)
@@ -42,8 +42,8 @@ func TestNewServerFromConfig(t *testing.T) {
 }
 
 
-func TestNewServerFromConfigEnv(t *testing.T) {
-  s, err := NewServerFromConfig("testdata/server.cfg", "prod")
+func TestNewFromConfigEnv(t *testing.T) {
+  s, err := NewFromConfig("testdata/server.cfg", "prod")
   if err != nil { t.Fatal( err ) }
 
   testAssertEqual(t, "prod", s.Env)
@@ -60,8 +60,8 @@ func TestNewServerFromConfigEnv(t *testing.T) {
 }
 
 
-func TestNewServerFromFlag(t *testing.T) {
-  s, err := NewServerFromFlag(
+func TestNewFromFlag(t *testing.T) {
+  s, err := NewFromFlag(
               "test","-a",":7000","-pid","path/to/server.pid","-e","stage")
   if err != nil { t.Fatal( err ) }
 
@@ -72,8 +72,8 @@ func TestNewServerFromFlag(t *testing.T) {
 }
 
 
-func TestNewServerFromFlagAndConfig(t *testing.T) {
-  s, err := NewServerFromFlag(
+func TestNewFromFlagAndConfig(t *testing.T) {
+  s, err := NewFromFlag(
               "test","-a",":7000","-c","testdata/server.cfg","-e","prod")
   if err != nil { t.Fatal( err ) }
 

@@ -56,7 +56,7 @@ include (
 
 
 func main() {
-  s, err := gosrv.NewServerFromFlag()
+  s, err := gosrv.NewFromFlag()
   if err != nil { panic(err) }
 
   customThing, err := s.Config.String("customThing")

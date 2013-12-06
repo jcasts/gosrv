@@ -10,7 +10,7 @@ import (
 )
 
 func main() {
-  s, err := gosrv.NewServerFromFlag()
+  s, err := gosrv.NewFromFlag()
 
   if err != nil {
     fmt.Println(err)

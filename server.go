@@ -27,7 +27,7 @@ type Server struct {
 
 // Creates a new Server instance with an optional environment name.
 // The default environment is "dev".
-func NewServer(env ...string) *Server {
+func New(env ...string) *Server {
   s := &Server{PidFile: DefaultPidFile}
 
   if len(env) > 0 && env[0] != "" {
@@ -55,8 +55,19 @@ func NewServer(env ...string) *Server {
 
 // Create a new Server from a config file with an optional environment name.
 // The default environment is "dev".
-func NewServerFromConfig(config_file string, env ...string) (*Server, error) {
-  s := NewServer()
+//
+// Valid configuration keys are:
+//  * addr            The address to boot the server on (default ":9000")
+//  * pidFile         Location to store PID in (default "<bin-name>.pid")
+//  * readTimeout     Server read timeout (default to net/http default)
+//  * writeTimeout    Server write timeout (default to net/http default)
+//  * maxHeaderBytes  Max header bytes allowed (default to net/http default)
+//  * logFormat       Log format to write in (default to DefaultLogFormat)
+//  * timeFormat      Time format for logs (default to DefaultTimeFormat)
+//  * certFile        TLS cert file (default none)
+//  * keyFile         TLS key file (default none)
+func NewFromConfig(config_file string, env ...string) (*Server, error) {
+  s := New()
 
   if len(env) > 0 && env[0] != "" { s.Env = env[0] }
 
@@ -78,8 +89,14 @@ func NewServerFromConfig(config_file string, env ...string) (*Server, error) {
   maxHeaderBytes, err := cfg.Int("maxHeaderBytes")
   if err == nil { s.MaxHeaderBytes = maxHeaderBytes }
 
-  addr, _ := cfg.String("addr")
+  addr, err := cfg.String("addr")
   if err == nil { s.Addr = addr }
+
+  logFormat, err := cfg.String("logFormat")
+  if err == nil { s.Logger.SetLogFormat(logFormat) }
+
+  timeFormat, err := cfg.String("timeFormat")
+  if err == nil { s.Logger.SetTimeFormat(timeFormat) }
 
   certFile, err := cfg.String("certFile")
   if err == nil { s.CertFile = certFile }
@@ -94,7 +111,7 @@ func NewServerFromConfig(config_file string, env ...string) (*Server, error) {
 // Reads command line arguments to create a new Server instance. Uses a
 // config file if provided to the -c option. Command line arguments
 // override config values.
-func NewServerFromFlag(args ...string) (*Server, error) {
+func NewFromFlag(args ...string) (*Server, error) {
   var s *Server
   var err error
 
@@ -105,11 +122,11 @@ func NewServerFromFlag(args ...string) (*Server, error) {
   if !ForceProdEnv { env = f.env }
 
   if f.configFile != "" {
-    s, err = NewServerFromConfig(f.configFile, env)
+    s, err = NewFromConfig(f.configFile, env)
     if err != nil && f.configFile != DefaultConfigFile { return s, err }
   }
 
-  if s == nil { s = NewServer(env) }
+  if s == nil { s = New(env) }
 
   if f.pidFile != "" && f.pidFile != DefaultPidFile { s.PidFile = f.pidFile }
   if f.addr != "" && f.addr != DefaultAddr { s.Addr = f.addr }
