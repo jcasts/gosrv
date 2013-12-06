@@ -25,23 +25,23 @@ Usage: myserver [options]
 
 ```ini
 [DEFAULT]
-addr: ":9000"
-pidFile: path/to/file.pid
-readTimeout: 5s
-writeTimeout: 500ms
-certFile: path/to/myserver.cert
-keyFile: path/to/myserver.key
+addr=":9000"
+pidFile=path/to/file.pid
+readTimeout=5s
+writeTimeout=500ms
+certFile=path/to/myserver.cert
+keyFile=path/to/myserver.key
 
 timeFormat=(02/01/2006 15:04:05)
 logFormat=$RemoteAddr - $RemoteUser $Time "$Request" $Status $BodyBytes
 
-customThing: foobar
+customThing=foobar
 
 [dev]
-customThing: baz
+customThing=baz
 
 [prod]
-readTimeout: 2s
+readTimeout=2s
 
 ```
 
