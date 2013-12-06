@@ -9,8 +9,12 @@ import (
   "fmt"
 )
 
+// Interface for value fetching functions. Time represents when the request
+// was received. The given ResponseWriter should always be a gosrv.Response
+// when used in a gosrv.Mux.
 type LogValueFunc func(time.Time, http.ResponseWriter, *http.Request)string;
 
+// Map of logFormat keywords to functions. More may be added at need.
 var LogValueMap = map[string]LogValueFunc {
   "$RemoteAddr": lvRemoteAddr,
   "$Protocol": lvProtocol,
@@ -32,6 +36,7 @@ var DefaultLogFormat =
 var DefaultTimeFormat = "[02/Jan/2006:15:04:05 -0700]"
 
 
+// The logger interface for gosrv.Mux.
 type HttpLogger interface {
   io.Writer
   SetLogFormat(format string)
