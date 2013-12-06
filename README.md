@@ -1,7 +1,8 @@
 # GoSrv
 
 GoSrv is a thin wrapper around GoLang's HTTP server, to provide basic
-command-line functionality, and env-specific configuration.
+command-line functionality, env-specific configuration, request logging,
+and graceful shutdowns.
 
 ### Command Line
 

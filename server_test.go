@@ -54,6 +54,12 @@ func TestNewFromConfigEnv(t *testing.T) {
   testAssertEqual(t, "path/to/server.cert", s.CertFile)
   testAssertEqual(t, "path/to/server.key", s.KeyFile)
 
+  l, _ := s.Logger.(*httpLogger)
+  testAssertEqual(t, "(02/01/2006 15:04:05)", l.timeFormat)
+
+  logFmt := "$RemoteAddr - $RemoteUser $Time \"$Request\" $Status $BodyBytes"
+  testAssertEqual(t, logFmt, l.logFormat)
+
   val, err := s.Config.String("customConfig")
   if err != nil { t.Fatal( err ) }
   testAssertEqual(t, "customValue", val)
