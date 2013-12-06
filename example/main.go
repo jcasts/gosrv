@@ -22,6 +22,7 @@ func main() {
   })
 
   s.OnStop(func()error{
+    if s.Env != "test" { return nil }
     ioutil.WriteFile("done.txt", []byte("main finished"), 0666)
     fmt.Println("Sleeping for 1s")
     time.Sleep(1 * time.Second)

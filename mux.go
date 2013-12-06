@@ -7,9 +7,11 @@ import (
 )
 
 
+// The Mux struct handles logging and graceful connection terminations
+// on shutdown.
 type Mux struct {
   *http.ServeMux
-  Logger *HttpLogger
+  Logger HttpLogger
 }
 
 
@@ -19,7 +21,8 @@ func NewMux() *Mux {
 
 
 func (m *Mux) ServeHTTP(wr http.ResponseWriter, req *http.Request) {
-  res := &Response{wr, 200, 0, time.Now()}
+  res := &Response{wr, 200, 0}
+  stime := time.Now()
   m.ServeMux.ServeHTTP(res, req)
-  m.Logger.Log(res, req)
+  m.Logger.Log(stime, res, req)
 }

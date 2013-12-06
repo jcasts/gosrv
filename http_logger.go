@@ -9,7 +9,7 @@ import (
   "fmt"
 )
 
-type LogValueMapper func(*Response, *http.Request)string;
+type LogValueMapper func(time.Time, http.ResponseWriter, *http.Request)string;
 
 var LogValueMap = map[string]LogValueMapper {
   "$RemoteAddr": lvRemoteAddr,
@@ -32,7 +32,13 @@ var DefaultLogFormat =
 var DefaultTimeFormat = "[02/Jan/2006:15:04:05 -0700]"
 
 
-type HttpLogger struct {
+type HttpLogger interface {
+  SetLogFormat(format string)
+  Log(t time.Time, wr http.ResponseWriter, req *http.Request)
+}
+
+
+type httpLogger struct {
   logFormat   string
   TimeFormat  string
   keys        []string
@@ -40,20 +46,20 @@ type HttpLogger struct {
 }
 
 
-func NewHttpLogger(wr io.Writer, formats ...string) *HttpLogger {
+func NewHttpLogger(wr io.Writer, formats ...string) HttpLogger {
   log_format  := DefaultLogFormat
   time_format := DefaultTimeFormat
 
   if len(formats) > 0 { log_format = formats[0] }
   if len(formats) > 1 { time_format = formats[1] }
 
-  l := &HttpLogger{TimeFormat: time_format, Writer: wr}
+  l := &httpLogger{TimeFormat: time_format, Writer: wr}
   l.SetLogFormat(log_format)
   return l
 }
 
 
-func (l *HttpLogger) SetLogFormat(log_format string) {
+func (l *httpLogger) SetLogFormat(log_format string) {
   keys := []string{}
   for k, _ := range LogValueMap {
     if strings.Contains(log_format, k) {
@@ -66,11 +72,11 @@ func (l *HttpLogger) SetLogFormat(log_format string) {
 
 
 
-func (l *HttpLogger) Log(res *Response, req *http.Request) {
+func (l *httpLogger) Log(t time.Time, wr http.ResponseWriter, req *http.Request) {
   repl := []string{}
 
   for _, k := range l.keys {
-    repl = append(repl, k, LogValueMap[k](res, req))
+    repl = append(repl, k, LogValueMap[k](t, wr, req))
   }
 
   r := strings.NewReplacer(repl...)
@@ -81,42 +87,45 @@ func (l *HttpLogger) Log(res *Response, req *http.Request) {
 
 
 
-func lvRemoteAddr(res *Response, req *http.Request) string {
+func lvRemoteAddr(t time.Time, wr http.ResponseWriter, req *http.Request) string {
   host, _, err := net.SplitHostPort(req.RemoteAddr)
   if err != nil { host = req.RemoteAddr }
   return host
 }
 
 
-func lvDuration(res *Response, req *http.Request) string {
-  duration := time.Since(res.requestTime) / time.Microsecond
+func lvDuration(t time.Time, wr http.ResponseWriter, req *http.Request) string {
+  duration := time.Since(t) / time.Microsecond
   return fmt.Sprintf("%d", duration)
 }
 
 
-func lvProtocol(res *Response, req *http.Request) string {
+func lvProtocol(t time.Time, wr http.ResponseWriter, req *http.Request) string {
   return req.Proto
 }
 
 
-func lvRequestTime(res *Response, req *http.Request) string {
-  return res.requestTime.Format(DefaultTimeFormat)
+func lvRequestTime(t time.Time, wr http.ResponseWriter, req *http.Request) string {
+  return t.Format(DefaultTimeFormat)
 }
 
 
-func lvRequestMethod(res *Response, req *http.Request) string {
+func lvRequestMethod(t time.Time, wr http.ResponseWriter, req *http.Request) string {
   return req.Method
 }
 
 
-func lvResponseBytes(res *Response, req *http.Request) string {
-  b := fmt.Sprintf("%d", res.ContentLength())
-  if b == "0" { b = "-" }
+func lvResponseBytes(t time.Time, wr http.ResponseWriter, req *http.Request) string {
+  b := "-"
+  if res, ok := wr.(*Response); ok {
+    b = fmt.Sprintf("%d", res.ContentLength())
+    if b == "0" { b = "-" }
+  }
   return b
 }
 
 
-func lvRemoteUser(res *Response, req *http.Request) string {
+func lvRemoteUser(t time.Time, wr http.ResponseWriter, req *http.Request) string {
   remoteUser := "-"
   if req.URL.User != nil && req.URL.User.Username() != "" {
     remoteUser = req.URL.User.Username()
@@ -127,33 +136,35 @@ func lvRemoteUser(res *Response, req *http.Request) string {
 }
 
 
-func lvRequestPath(res *Response, req *http.Request) string {
+func lvRequestPath(t time.Time, wr http.ResponseWriter, req *http.Request) string {
   return req.URL.Path
 }
 
 
-func lvRequestUri(res *Response, req *http.Request) string {
+func lvRequestUri(t time.Time, wr http.ResponseWriter, req *http.Request) string {
   return req.RequestURI
 }
 
 
-func lvRequestFirstLine(res *Response, req *http.Request) string {
-  return lvRequestMethod(res, req) + " " +
-          lvRequestUri(res, req) + " " +
-          lvProtocol(res, req)
+func lvRequestFirstLine(t time.Time, wr http.ResponseWriter, req *http.Request) string {
+  return lvRequestMethod(t, wr, req) + " " +
+          lvRequestUri(t, wr, req) + " " +
+          lvProtocol(t, wr, req)
 }
 
 
-func lvResponseStatus(res *Response, req *http.Request) string {
-  return fmt.Sprintf("%d", res.Status)
+func lvResponseStatus(t time.Time, wr http.ResponseWriter, req *http.Request) string {
+  if res, ok := wr.(*Response); ok {
+    return fmt.Sprintf("%d", res.Status) }
+  return "-"
 }
 
 
-func lvReferer(res *Response, req *http.Request) string {
+func lvReferer(t time.Time, wr http.ResponseWriter, req *http.Request) string {
   return req.Referer()
 }
 
 
-func lvUserAgent(res *Response, req *http.Request) string {
+func lvUserAgent(t time.Time, wr http.ResponseWriter, req *http.Request) string {
   return req.UserAgent()
 }

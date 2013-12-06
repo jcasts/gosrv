@@ -3,7 +3,6 @@ package gosrv
 import (
   "net/http"
   "strconv"
-  "time"
 )
 
 
@@ -11,7 +10,6 @@ type Response struct {
   http.ResponseWriter
   Status int
   written int
-  requestTime time.Time
 }
 
 

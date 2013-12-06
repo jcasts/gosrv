@@ -30,7 +30,7 @@ func testStartDaemon() {
   err := exec.Command("go", "build", "-o", filename, filename+".go").Run()
   if err != nil { panic( "Could not build test server "+testDaemon ) }
 
-  err = exec.Command(filename, "-d").Run()
+  err = exec.Command(filename, "-d", "-e", "test").Run()
   if err != nil { panic( "Could not start test server on port 9099" ) }
   time.Sleep(100 * time.Millisecond)
 }
