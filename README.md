@@ -62,8 +62,9 @@ func main() {
   customThing, err := s.Config.String("customThing")
   if err != nil { fmt.Println("Custom thing is: "+customThing) }
 
-  s.OnStop(func(){
+  s.OnStop(func()error{
     // Do something when ^C is received, before shut-down
+    return nil
   })
 
   s.HandleFunc("/", handler)
