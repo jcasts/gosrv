@@ -26,6 +26,7 @@ var LogValueMap = map[string]LogValueMapper {
   "%s": lvResponseStatus,
   "%{Referer}i": lvReferer,
   "%{User-agent}i": lvUserAgent,
+  "%{User-Agent}i": lvUserAgent,
 }
 
 var DefaultLogFormat = "%h - %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-agent}i\""
@@ -36,27 +37,34 @@ type HttpLogger struct {
   logFormat  string
   TimeFormat  string
   keys        []string
-  writer      io.Writer
+  Writer      io.Writer
 }
 
 
 func NewHttpLogger(wr io.Writer, formats ...string) *HttpLogger {
   log_format  := DefaultLogFormat
   time_format := DefaultTimeFormat
-  keys        := []string{}
 
   if len(formats) > 0 { log_format = formats[0] }
+  if len(formats) > 1 { time_format = formats[1] }
 
+  l := &HttpLogger{TimeFormat: time_format, Writer: wr}
+  l.SetLogFormat(log_format)
+  return l
+}
+
+
+func (l *HttpLogger) SetLogFormat(log_format string) {
+  keys := []string{}
   for k, _ := range LogValueMap {
     if strings.Contains(log_format, k) {
       keys = append(keys, k)
     }
   }
-
-  if len(formats) > 1 { time_format = formats[1] }
-
-  return &HttpLogger{log_format, time_format, keys, wr}
+  l.logFormat = log_format
+  l.keys = keys
 }
+
 
 
 func (l *HttpLogger) Log(res *Response, req *http.Request) {
@@ -69,7 +77,7 @@ func (l *HttpLogger) Log(res *Response, req *http.Request) {
   r := strings.NewReplacer(repl...)
   line := r.Replace(l.logFormat) + "\n"
 
-  l.writer.Write([]byte(line))
+  l.Writer.Write([]byte(line))
 }
 
 
