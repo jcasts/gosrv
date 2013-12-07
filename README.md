@@ -1,3 +1,4 @@
+[![Go Walker](http://gowalker.org/api/v1/badge)](http://gowalker.org/github.com/yaks/gosrv)
 # GoSrv
 
 GoSrv is a thin wrapper around GoLang's HTTP server, to provide basic
