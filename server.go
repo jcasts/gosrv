@@ -201,6 +201,8 @@ func (s *Server) ListenAndServeTLS(certFile, keyFile string) error {
 
 // Starts the server for the given listener.
 func (s *Server) Serve(l net.Listener) error {
+  s.Stop()
+
   err := s.prepare()
   if err != nil { return err }
 
