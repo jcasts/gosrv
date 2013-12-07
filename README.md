@@ -73,7 +73,8 @@ func main() {
 
   s.HandleFunc("/", handler)
 
-  panic( s.ListenAndServe() )
+  err = s.ListenAndServe()
+  if err != nil { panic(err) }
 }
 
 
