@@ -26,7 +26,7 @@ var DefaultConfigFile = "server.cfg"
 var DefaultAppDir     = "./"
 var DefaultAppName    = "server"
 
-var srvChan = make(chan Server, 1)
+var srvChan = make(chan *Server, 1)
 var sigChan = make(chan os.Signal)
 
 
@@ -40,9 +40,8 @@ func handleInterrupt() {
       max := len(srvChan)
       for i := 0; i < max; i++ {
         s := <-srvChan
-        s.finish()
+        s.Stop()
       }
-      os.Exit(0)
     }
   }()
 }

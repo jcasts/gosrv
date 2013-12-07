@@ -7,6 +7,7 @@ import (
   "os"
   "io/ioutil"
   "time"
+  "crypto/tls"
 )
 
 
@@ -21,7 +22,9 @@ type Server struct {
   Env         string
   CertFile    string
   KeyFile     string
+  listener    net.Listener
   callbacks   []func()error
+  stopped     bool
 }
 
 
@@ -160,22 +163,42 @@ func NewFromFlag(args ...string) (*Server, error) {
 
 // Starts the server and listens on the given server.Addr.
 func (s *Server) ListenAndServe() error {
-  err := s.prepare()
-  if err != nil { return err }
-
   if s.CertFile != "" && s.KeyFile != "" {
-    return s.Server.ListenAndServeTLS(s.CertFile, s.KeyFile)
+    return s.ListenAndServeTLS(s.CertFile, s.KeyFile)
+
   } else {
-    return s.Server.ListenAndServe()
+    addr := s.Addr
+    if addr == "" { addr = ":http" }
+
+    l, e := net.Listen("tcp", addr)
+    if e != nil { return e }
+
+    return s.Serve(l)
   }
 }
 
 
 // Starts the server with the given TLS files and listens on server.Addr.
 func (s *Server) ListenAndServeTLS(certFile, keyFile string) error {
-  err := s.prepare()
+  addr := s.Addr
+  if addr == "" { addr = ":https" }
+
+  config := &tls.Config{}
+  if s.TLSConfig != nil { *config = *s.TLSConfig }
+  if config.NextProtos == nil {
+    config.NextProtos = []string{"http/1.1"}
+  }
+
+  var err error
+  config.Certificates = make([]tls.Certificate, 1)
+  config.Certificates[0], err = tls.LoadX509KeyPair(certFile, keyFile)
   if err != nil { return err }
-  return s.Server.ListenAndServeTLS(certFile, keyFile)
+
+  conn, err := net.Listen("tcp", addr)
+  if err != nil { return err }
+
+  tlsListener := tls.NewListener(conn, config)
+  return s.Serve(tlsListener)
 }
 
 
@@ -183,7 +206,12 @@ func (s *Server) ListenAndServeTLS(certFile, keyFile string) error {
 func (s *Server) Serve(l net.Listener) error {
   err := s.prepare()
   if err != nil { return err }
-  return s.Server.Serve(l)
+
+  s.listener = l
+  err = s.Server.Serve(l)
+
+  if s.stopped { err = nil }
+  return err
 }
 
 
@@ -223,6 +251,17 @@ func (s *Server) OnStop(fn func()error) {
 }
 
 
+// Stop the server and gracefully shutdown connections.
+func (s *Server) Stop() error {
+  if s.listener == nil { return mkerr("Listener non-existant") }
+
+  s.stopped = true
+  s.listener.Close()
+  s.listener = nil
+  return s.finish()
+}
+
+
 func (s *Server) prepare() error {
   s.callbacks = append(s.callbacks, s.DeletePidFile)
 
@@ -233,13 +272,20 @@ func (s *Server) prepare() error {
   err := s.WritePidFile()
   if err != nil { return err }
 
-  srvChan <- *s
+  s.stopped = false
+  s.conns.Add(1)
+
+  srvChan <- s
   return nil
 }
 
 
-func (s *Server) finish() {
+func (s *Server) finish() error {
+  var err error
   for _, fn := range s.callbacks {
-    fn()
+    e := fn()
+    if e != nil && err == nil { err = e }
   }
+  s.conns.Done()
+  return err
 }
