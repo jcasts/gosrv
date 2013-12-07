@@ -42,12 +42,7 @@ func New(env ...string) *Server {
   }
 
   mux := NewMux()
-
-  s.Server = &http.Server{
-    Addr:     DefaultAddr,
-    Handler:  mux,
-  }
-
+  s.Server = &http.Server{Handler: mux}
   s.Mux  = mux
   s.Config    = NewConfig(s.Env)
   s.callbacks = make([]func()error, 0)
@@ -167,11 +162,12 @@ func (s *Server) ListenAndServe() error {
     return s.ListenAndServeTLS(s.CertFile, s.KeyFile)
 
   } else {
-    addr := s.Addr
-    if addr == "" { addr = ":http" }
+    if s.Addr == "" { s.Addr = DefaultAddr }
 
-    l, e := net.Listen("tcp", addr)
+    l, e := net.Listen("tcp", s.Addr)
     if e != nil { return e }
+
+    s.Logger.Printf("Server %s listening...\n", s.Addr)
 
     return s.Serve(l)
   }
@@ -180,8 +176,7 @@ func (s *Server) ListenAndServe() error {
 
 // Starts the server with the given TLS files and listens on server.Addr.
 func (s *Server) ListenAndServeTLS(certFile, keyFile string) error {
-  addr := s.Addr
-  if addr == "" { addr = ":https" }
+  if s.Addr == "" { s.Addr = ":https" }
 
   config := &tls.Config{}
   if s.TLSConfig != nil { *config = *s.TLSConfig }
@@ -194,8 +189,10 @@ func (s *Server) ListenAndServeTLS(certFile, keyFile string) error {
   config.Certificates[0], err = tls.LoadX509KeyPair(certFile, keyFile)
   if err != nil { return err }
 
-  conn, err := net.Listen("tcp", addr)
+  conn, err := net.Listen("tcp", s.Addr)
   if err != nil { return err }
+
+  s.Logger.Printf("Server %s listening...\n", s.Addr)
 
   tlsListener := tls.NewListener(conn, config)
   return s.Serve(tlsListener)
@@ -258,6 +255,7 @@ func (s *Server) Stop() error {
   s.stopped = true
   s.listener.Close()
   s.listener = nil
+  s.Logger.Printf("Server %s stopping...\n", s.Addr)
   return s.finish()
 }
 

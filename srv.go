@@ -34,9 +34,7 @@ func handleInterrupt() {
   signal.Notify(sigChan, os.Interrupt)
 
   go func() {
-    for sig := range sigChan {
-      fmt.Printf("\nCaptured %v, exiting..\n", sig)
-
+    for _ = range sigChan {
       max := len(srvChan)
       for i := 0; i < max; i++ {
         s := <-srvChan

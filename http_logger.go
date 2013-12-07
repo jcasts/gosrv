@@ -42,6 +42,7 @@ type HttpLogger interface {
   SetLogFormat(format string)
   SetTimeFormat(time_format string)
   SetWriter(wr io.Writer)
+  Printf(str string, objs ...interface{})
   Log(t time.Time, wr http.ResponseWriter, req *http.Request)
 }
 
@@ -91,6 +92,12 @@ func (l *httpLogger) SetWriter(wr io.Writer) {
 
 func (l *httpLogger) Write(bytes []byte) (int, error) {
   return l.writer.Write(bytes)
+}
+
+
+func (l *httpLogger) Printf(str string, objs ...interface{}) {
+  output := fmt.Sprintf(str, objs...)
+  l.Write([]byte(output))
 }
 
 
