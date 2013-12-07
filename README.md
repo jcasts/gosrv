@@ -1,7 +1,7 @@
 [![Go Walker](http://gowalker.org/api/v1/badge)](http://gowalker.org/github.com/yaks/gosrv)
 # GoSrv
 
-GoSrv is a thin wrapper around GoLang's HTTP server, to provide basic
+GoSrv is a thin wrapper around Go's HTTP server, to provide basic
 command-line functionality, env-specific configuration, request logging,
 and graceful shutdowns.
 
