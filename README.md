@@ -34,6 +34,7 @@ keyFile=path/to/myserver.key
 
 timeFormat=(02/01/2006 15:04:05)
 logFormat=$RemoteAddr - $RemoteUser $Time "$Request" $Status $BodyBytes
+logFile=path/to/myserver.log
 
 customThing=foobar
 
