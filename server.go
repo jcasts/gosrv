@@ -12,7 +12,7 @@ import (
 
 
 // The gosrv server is a wrapper around Go's http server and http handler.
-// It handles Interrupt signals with callbacks before shutdown, and can be
+// It supports shutdown via Interrupt signals, and can be
 // constructed via a config file, command line options, or both.
 type Server struct {
   *http.Server
@@ -23,7 +23,6 @@ type Server struct {
   CertFile    string
   KeyFile     string
   listener    net.Listener
-  callbacks   []func()error
   stopped     bool
 }
 
@@ -45,7 +44,6 @@ func New(env ...string) *Server {
   s.Server = &http.Server{Handler: mux}
   s.Mux  = mux
   s.Config    = NewConfig(s.Env)
-  s.callbacks = make([]func()error, 0)
 
   return s
 }
@@ -244,14 +242,6 @@ func (s *Server) StopOther() error {
 }
 
 
-// Add a callback for when the server shuts down.
-func (s *Server) OnStop(fn func()error) {
-  if len(s.callbacks) == 0 {
-    s.callbacks = []func()error{} }
-  s.callbacks = append(s.callbacks, fn)
-}
-
-
 // Stop the server and gracefully shutdown connections.
 func (s *Server) Stop() error {
   if s.listener == nil { return mkerr("Listener non-existant") }
@@ -265,12 +255,6 @@ func (s *Server) Stop() error {
 
 
 func (s *Server) prepare() error {
-  s.callbacks = append(s.callbacks, s.DeletePidFile)
-
-  if l, ok := s.Logger.(*httpLogger); ok {
-    if w, ok := l.writer.(*os.File); ok {
-      s.callbacks = append(s.callbacks, w.Close) }}
-
   err := s.WritePidFile()
   if err != nil { return err }
 
@@ -282,11 +266,6 @@ func (s *Server) prepare() error {
 
 
 func (s *Server) finish() error {
-  var err error
-  for _, fn := range s.callbacks {
-    e := fn()
-    if e != nil && err == nil { err = e }
-  }
   s.conns.Done()
-  return err
+  return s.DeletePidFile()
 }

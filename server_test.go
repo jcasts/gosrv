@@ -9,7 +9,7 @@ import (
 func TestNew(t *testing.T) {
   s := New()
   testAssertEqual(t, "dev", s.Env)
-  testAssertEqual(t, ":9000", s.Addr)
+  testAssertEqual(t, "", s.Addr)
 }
 
 
@@ -20,7 +20,7 @@ func TestNewForceProd(t *testing.T) {
 
   s := New()
   testAssertEqual(t, "prod", s.Env)
-  testAssertEqual(t, ":9000", s.Addr)
+  testAssertEqual(t, "", s.Addr)
 }
 
 

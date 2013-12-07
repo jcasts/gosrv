@@ -21,14 +21,12 @@ func main() {
     wr.Write([]byte("Hello World!\n"))
   })
 
-  s.OnStop(func()error{
-    if s.Env != "test" { return nil }
+  err = s.ListenAndServe()
+  if err != nil { panic( err ) }
+
+  if s.Env == "test" {
     ioutil.WriteFile("done.txt", []byte("main finished"), 0666)
     fmt.Println("Sleeping for 1s")
     time.Sleep(1 * time.Second)
-    return nil
-  })
-
-  err = s.ListenAndServe()
-  if err != nil { panic( err ) }
+  }
 }
