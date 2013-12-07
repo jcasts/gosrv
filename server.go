@@ -208,6 +208,8 @@ func (s *Server) Serve(l net.Listener) error {
   err = s.Server.Serve(l)
 
   if s.stopped { err = nil }
+  s.stopped = false
+
   return err
 }
 
@@ -270,7 +272,6 @@ func (s *Server) prepare() error {
   err := s.WritePidFile()
   if err != nil { return err }
 
-  s.stopped = false
   s.conns.Add(1)
 
   srvChan <- s
