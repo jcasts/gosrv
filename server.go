@@ -8,6 +8,8 @@ import (
   "io/ioutil"
   "time"
   "crypto/tls"
+  "sync"
+  "os/signal"
 )
 
 
@@ -24,13 +26,16 @@ type Server struct {
   KeyFile     string
   listener    net.Listener
   stopped     bool
+  rwlock      sync.RWMutex
+  sigchan     chan os.Signal
 }
 
 
 // Creates a new Server instance with an optional environment name.
 // The default environment is "dev".
 func New(env ...string) *Server {
-  s := &Server{PidFile: DefaultPidFile}
+  s := &Server{PidFile: DefaultPidFile,
+    rwlock: sync.RWMutex{}, sigchan: make(chan os.Signal)}
 
   if len(env) > 0 && env[0] != "" {
     s.Env = env[0]
@@ -42,8 +47,8 @@ func New(env ...string) *Server {
 
   mux := NewMux()
   s.Server = &http.Server{Handler: mux}
-  s.Mux  = mux
-  s.Config    = NewConfig(s.Env)
+  s.Mux    = mux
+  s.Config = NewConfig(s.Env)
 
   return s
 }
@@ -202,13 +207,16 @@ func (s *Server) Serve(l net.Listener) error {
   s.Stop()
 
   err := s.prepare()
-  if err != nil { return err }
 
-  s.listener = l
-  err = s.Server.Serve(l)
+  if err == nil {
+    s.listener = l
+    err = s.Server.Serve(l)
+  }
 
   if s.stopped { err = nil }
   s.stopped = false
+
+  if err != nil { s.Logger.Printf(err.Error() + "\n") }
 
   return err
 }
@@ -216,13 +224,23 @@ func (s *Server) Serve(l net.Listener) error {
 
 // Writes the server's pidfile. Typically called at server Listen time.
 func (s Server) WritePidFile() error {
+  if s.PidFile == "" { return nil }
+
+  pidStr := fmt.Sprintf("%d", os.Getpid())
+
   _, err := os.Stat(s.PidFile)
 
   if err == nil {
-    return mkerr("PID file %s already exists. Please delete it and try again.", s.PidFile) }
+    bytes, err := ioutil.ReadFile(s.PidFile)
+    filePid := string(bytes)
+    if err == nil && filePid == pidStr {
+      return nil
+    } else if filePid != "" {
+      return mkerr("PID file %s already exists. Please delete it and try again.", s.PidFile)
+    }
+  }
 
-  content := []byte( fmt.Sprintf("%d", os.Getpid()) )
-  err = ioutil.WriteFile(s.PidFile, content, 0666)
+  err = ioutil.WriteFile(s.PidFile, []byte(pidStr), 0666)
   return err
 }
 
@@ -244,13 +262,31 @@ func (s *Server) StopOther() error {
 
 // Stop the server and gracefully shutdown connections.
 func (s *Server) Stop() error {
-  if s.listener == nil { return mkerr("Listener non-existant") }
+  s.rwlock.RLock()
+  if s.listener == nil {
+    s.rwlock.RUnlock()
+    return mkerr("Listener non-existant")
+  }
+  s.rwlock.RUnlock()
 
+  s.rwlock.Lock()
   s.stopped = true
   s.listener.Close()
   s.listener = nil
+  s.rwlock.Unlock()
+
   s.Logger.Printf("Server %s stopping...\n", s.Addr)
   return s.finish()
+}
+
+
+// Returns true if the server is running.
+func (s *Server) Running() bool {
+  s.rwlock.RLock()
+  r := s.listener != nil && !s.stopped
+  s.rwlock.RUnlock()
+
+  return r
 }
 
 
@@ -260,12 +296,19 @@ func (s *Server) prepare() error {
 
   s.conns.Add(1)
 
-  srvChan <- s
+  signal.Notify(s.sigchan, os.Interrupt)
+  go func() {
+    <-s.sigchan // block until signal is received
+    s.Stop()
+  }()
+
   return nil
 }
 
 
 func (s *Server) finish() error {
   s.conns.Done()
+  signal.Stop(s.sigchan)
+  close(s.sigchan)
   return s.DeletePidFile()
 }

@@ -7,7 +7,6 @@ import (
   "fmt"
   "time"
   "os"
-  "os/signal"
   "io/ioutil"
   "path/filepath"
   "strconv"
@@ -21,28 +20,10 @@ import (
 var ForceProdEnv      = false
 var DefaultAddr       = ":9000"
 var DefaultEnv        = "dev"
-var DefaultPidFile    = "server.pid"
+var DefaultPidFile    = ""
 var DefaultConfigFile = "server.cfg"
 var DefaultAppDir     = "./"
 var DefaultAppName    = "server"
-
-var srvChan = make(chan *Server, 1)
-var sigChan = make(chan os.Signal)
-
-
-func handleInterrupt() {
-  signal.Notify(sigChan, os.Interrupt)
-
-  go func() {
-    for _ = range sigChan {
-      max := len(srvChan)
-      for i := 0; i < max; i++ {
-        s := <-srvChan
-        s.Stop()
-      }
-    }
-  }()
-}
 
 
 func stopProcessAt(pid_file string) error {
@@ -130,5 +111,4 @@ func setDefaults(args []string) {
 
 func init() {
   setDefaults(os.Args)
-  handleInterrupt()
 }
