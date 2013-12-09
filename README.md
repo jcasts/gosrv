@@ -1,9 +1,10 @@
 [![Go Walker](http://gowalker.org/api/v1/badge)](http://gowalker.org/github.com/yaks/gosrv)
+[![githalytics.com alpha](https://cruel-carlota.pagodabox.com/219643edaed8bef045626eb7dd5418cf "githalytics.com")](http://githalytics.com/yaks/gosrv)
 # GoSrv
 
 GoSrv is a thin wrapper around Go's HTTP server, to provide basic
-command-line functionality, env-specific configuration, request logging,
-and graceful shutdowns.
+command-line functionality, env-specific configuration, request logging, 
+graceful shutdowns, and daemonization.
 
 ### Command Line
 
