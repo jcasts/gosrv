@@ -97,12 +97,12 @@ func (l *httpLogger) Write(bytes []byte) (int, error) {
 
 
 func (l *httpLogger) Printf(format string, i ...interface{}) (int, error) {
-  return fmt.Fprintf(l.writer, format, i...)
+  return fmt.Fprintf(l, format, i...)
 }
 
 
 func (l *httpLogger) Println(i ...interface{}) (int, error) {
-  return fmt.Fprintln(l.writer, i...)
+  return fmt.Fprintln(l, i...)
 }
 
 
