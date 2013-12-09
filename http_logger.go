@@ -42,7 +42,8 @@ type HttpLogger interface {
   SetLogFormat(format string)
   SetTimeFormat(time_format string)
   SetWriter(wr io.Writer)
-  Printf(str string, objs ...interface{})
+  Println(i ...interface{}) (int, error)
+  Printf(format string, i ...interface{}) (int, error)
   Log(t time.Time, wr http.ResponseWriter, req *http.Request)
 }
 
@@ -95,9 +96,13 @@ func (l *httpLogger) Write(bytes []byte) (int, error) {
 }
 
 
-func (l *httpLogger) Printf(str string, objs ...interface{}) {
-  output := fmt.Sprintf(str, objs...)
-  l.Write([]byte(output))
+func (l *httpLogger) Printf(format string, i ...interface{}) (int, error) {
+  return fmt.Fprintf(l.writer, format, i...)
+}
+
+
+func (l *httpLogger) Println(i ...interface{}) (int, error) {
+  return fmt.Fprintln(l.writer, i...)
 }
 
 
