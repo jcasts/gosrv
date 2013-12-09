@@ -1,6 +1,6 @@
 // GoSrv is a thin wrapper around Go's HTTP server, to provide basic
-// command-line functionality, env-specific configuration, request logging,
-// and graceful shutdowns.
+// command-line functionality, env-specific configuration, request logging, 
+// graceful shutdowns, and daemonization.
 package gosrv
 
 import (
