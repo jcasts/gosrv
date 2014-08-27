@@ -67,7 +67,7 @@ func main() {
   if err != nil { panic(err) }
 
   customThing, err := s.Config.String("customThing")
-  if err != nil { fmt.Println("Custom thing is: "+customThing) }
+  if err != nil { fmt.Println("Custom thing is "+customThing+" for environment "+s.Config.Env) }
 
   s.HandleFunc("/", handler)
 
