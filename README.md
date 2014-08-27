@@ -55,7 +55,7 @@ readTimeout=2s
 ```Go
 package main
 
-include (
+import (
   "fmt"
   "gosrv"
   "net/http"
