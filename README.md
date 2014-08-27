@@ -1,5 +1,5 @@
-[![Go Walker](http://gowalker.org/api/v1/badge)](http://gowalker.org/github.com/yaks/gosrv)
-[![githalytics.com alpha](https://cruel-carlota.pagodabox.com/219643edaed8bef045626eb7dd5418cf "githalytics.com")](http://githalytics.com/yaks/gosrv)
+[![Go Walker](http://gowalker.org/api/v1/badge)](http://gowalker.org/github.com/jcasts/gosrv)
+[![githalytics.com alpha](https://cruel-carlota.pagodabox.com/219643edaed8bef045626eb7dd5418cf "githalytics.com")](http://githalytics.com/jcasts/gosrv)
 # GoSrv
 
 GoSrv is a thin wrapper around Go's HTTP server, to provide basic
