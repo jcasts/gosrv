@@ -213,12 +213,7 @@ func (s *Server) Serve(l net.Listener) error {
     err = s.Server.Serve(l)
   }
 
-  if s.stopped { err = nil }
-  s.stopped = false
-
-  if err != nil { s.Logger.Printf(err.Error() + "\n") }
-
-  return err
+  return s.finish(err)
 }
 
 
@@ -261,22 +256,20 @@ func (s *Server) StopOther() error {
 
 
 // Stop the server and gracefully shutdown connections.
-func (s *Server) Stop() error {
+func (s *Server) Stop() {
   s.rwlock.RLock()
   if s.listener == nil {
     s.rwlock.RUnlock()
-    return mkerr("Listener non-existant")
+    return
   }
   s.rwlock.RUnlock()
 
   s.rwlock.Lock()
+  s.Logger.Printf("Server %s stopping...\n", s.Addr)
+
   s.stopped = true
   s.listener.Close()
-  s.listener = nil
   s.rwlock.Unlock()
-
-  s.Logger.Printf("Server %s stopping...\n", s.Addr)
-  return s.finish()
 }
 
 
@@ -294,8 +287,6 @@ func (s *Server) prepare() error {
   err := s.WritePidFile()
   if err != nil { return err }
 
-  s.conns.Add(1)
-
   signal.Notify(s.sigchan, os.Interrupt)
   go func() {
     <-s.sigchan // block until signal is received
@@ -306,9 +297,23 @@ func (s *Server) prepare() error {
 }
 
 
-func (s *Server) finish() error {
-  s.conns.Done()
+func (s *Server) finish(err error) error {
+  s.rwlock.Lock()
+
+  if s.stopped {
+    err = nil
+    if s.conns != nil { s.conns.Wait() }
+  }
+  s.stopped = true
+
+  if err != nil { s.Logger.Printf(err.Error() + "\n") }
+
   signal.Stop(s.sigchan)
   close(s.sigchan)
-  return s.DeletePidFile()
+  s.listener = nil
+
+  err = s.DeletePidFile()
+
+  s.rwlock.Unlock()
+  return err
 }
