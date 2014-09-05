@@ -7,13 +7,14 @@ import (
   "fmt"
   "time"
   "os"
+  "bufio"
   "io/ioutil"
   "path/filepath"
   "strconv"
   "strings"
+  "syscall"
   "errors"
 )
-
 
 // Setting ForceProdEnv to true disables the -e command line argument
 // and runs the app with the "prod" environment by default.
@@ -47,16 +48,31 @@ func stopProcessAt(pid_file string) error {
   if err != nil {
     return mkerr("Could not stop server. PID %d was unresponsive.", pid) }
 
-  // Check every 1000 ms up to 10 times (10s total)
-  for i := 0; err == nil && i < 10; i++ {
-    time.Sleep(1000 * time.Millisecond)
-    _, err = os.Stat(pid_file)
+  for !waitForProc(proc) {
+    reader := bufio.NewReader(os.Stdin)
+    fmt.Printf("Process %d is taking too long to stop.\nForce exit? (y/N) ", pid)
+    text, _ := reader.ReadString('\n')
+
+    if (text == "y\n" || text == "Y\n") {
+      err = proc.Signal(os.Kill)
+      if err == nil && !waitForProc(proc) {
+        return mkerr("Process could not be stopped.")
+      }
+    }
   }
 
-  if err == nil {
-    return mkerr("Process %d is taking too long to stop.", pid) }
-
   return nil
+}
+
+func waitForProc(proc *os.Process) bool {
+  var err error
+  // Check every 100 ms up to 100 times (10s total)
+  for i := 0; err == nil && i < 100; i++ {
+    time.Sleep(100 * time.Millisecond)
+    err = proc.Signal(syscall.Signal(0))
+  }
+
+  return err != nil
 }
 
 

@@ -251,7 +251,10 @@ func (s Server) DeletePidFile() error {
 
 // Stop the server running at server.PidFile.
 func (s *Server) StopOther() error {
-  return stopProcessAt(s.PidFile)
+  err := stopProcessAt(s.PidFile)
+  if err == nil {
+    err = s.DeletePidFile() }
+  return err
 }
 
 
