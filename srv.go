@@ -49,9 +49,15 @@ func stopProcessAt(pid_file string) error {
     return mkerr("Could not stop server. PID %d was unresponsive.", pid) }
 
   for !waitForProc(proc) {
-    reader := bufio.NewReader(os.Stdin)
-    fmt.Printf("Process %d is taking too long to stop.\nForce exit? (y/N) ", pid)
-    text, _ := reader.ReadString('\n')
+    text := ""
+
+    if fileIsTTY(os.Stdin) {
+      reader := bufio.NewReader(os.Stdin)
+      fmt.Printf("Process %d is taking too long to stop.\nForce exit? (y/N) ", pid)
+      text, _ = reader.ReadString('\n')
+    } else {
+      return mkerr("Process %d is taking too long to exit.", pid)
+    }
 
     if (text == "y\n" || text == "Y\n") {
       err = proc.Signal(os.Kill)
@@ -62,6 +68,13 @@ func stopProcessAt(pid_file string) error {
   }
 
   return nil
+}
+
+func fileIsTTY(file *os.File) bool {
+  info, err := file.Stat()
+  if err != nil { return false }
+
+  return info.Mode() & os.ModeDevice == os.ModeDevice
 }
 
 func waitForProc(proc *os.Process) bool {
