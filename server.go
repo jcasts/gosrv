@@ -146,7 +146,7 @@ func NewFromFlag(args ...string) (*Server, error) {
     err := s.StopOther()
     if err != nil { return s, err }
 
-    fmt.Println("Server stopped!")
+    fmt.Println("\nServer stopped!\n")
     if f.stopServer { os.Exit(0) }
   }
 

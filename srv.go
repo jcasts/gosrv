@@ -47,13 +47,14 @@ func stopProcessAt(pid_file string) error {
   if err != nil {
     return mkerr("Could not stop server. PID %d was unresponsive.", pid) }
 
-  for i := 0; err == nil && i < 20; i++ {
-    time.Sleep(100 * time.Millisecond)
+  // Check every 1000 ms up to 10 times (10s total)
+  for i := 0; err == nil && i < 10; i++ {
+    time.Sleep(1000 * time.Millisecond)
     _, err = os.Stat(pid_file)
   }
 
   if err == nil {
-    return mkerr("Server at PID %d is taking too long to stop.", pid)}
+    return mkerr("Process %d is taking too long to stop.", pid) }
 
   return nil
 }
