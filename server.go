@@ -209,8 +209,8 @@ func (s *Server) Serve(l net.Listener) error {
   err := s.prepare()
 
   if err == nil {
-    s.listener = l
-    err = s.Server.Serve(l)
+    s.listener = Listener{l, s}
+    err = s.Server.Serve(s.listener)
   }
 
   return s.finish(err)
@@ -261,7 +261,7 @@ func (s *Server) StopOther() error {
 // Stop the server and gracefully shutdown connections.
 func (s *Server) Stop() {
   s.rwlock.RLock()
-  if s.listener == nil {
+  if s.listener == nil || s.stopped {
     s.rwlock.RUnlock()
     return
   }
@@ -292,11 +292,24 @@ func (s *Server) prepare() error {
 
   signal.Notify(s.sigchan, os.Interrupt)
   go func() {
-    <-s.sigchan // block until signal is received
+    <- s.sigchan // block until signal is received
     s.Stop()
   }()
 
   return nil
+}
+
+
+func (s *Server) waitForConnections() {
+  signal.Notify(s.sigchan, os.Interrupt)
+  go func() {
+    _, ok := <- s.sigchan // block until signal is received
+    if ok {
+      s.DeletePidFile()
+      exit(1, "Forced shutdown: connections were interrupted")
+    }
+  }()
+  s.conns.Wait()
 }
 
 
@@ -305,16 +318,16 @@ func (s *Server) finish(err error) error {
 
   if s.stopped {
     err = nil
-    if s.conns != nil { s.conns.Wait() }
+    if s.conns != nil { s.waitForConnections() }
   }
   s.stopped = true
 
   if err != nil { s.Logger.Printf(err.Error() + "\n") }
 
-  signal.Stop(s.sigchan)
   close(s.sigchan)
   s.listener = nil
 
+  signal.Stop(s.sigchan)
   err = s.DeletePidFile()
 
   s.rwlock.Unlock()

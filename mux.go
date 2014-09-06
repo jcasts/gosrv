@@ -22,7 +22,6 @@ func NewMux() *Mux {
 
 
 func (m *Mux) ServeHTTP(wr http.ResponseWriter, req *http.Request) {
-  if m.conns != nil { m.conns.Add(1) }
   res := &Response{wr, 200, 0}
   stime := time.Now()
   m.ServeMux.ServeHTTP(res, req)
