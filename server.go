@@ -140,10 +140,10 @@ func NewFromFlag(args ...string) (*Server, error) {
   if f.pidFile != "" && f.pidFile != DefaultPidFile { s.PidFile = f.pidFile }
   if f.addr != "" && f.addr != DefaultAddr { s.Addr = f.addr }
 
-  if f.stopServer || f.restartServer {
+  if f.stopServer || f.restartServer || f.killServer {
     fmt.Println("Stopping server...")
 
-    err := s.StopOther()
+    err := s.StopOther(f.killServer)
     if err != nil { return s, err }
 
     fmt.Println("\nServer stopped!\n")
@@ -250,8 +250,8 @@ func (s Server) DeletePidFile() error {
 
 
 // Stop the server running at server.PidFile.
-func (s *Server) StopOther() error {
-  err := stopProcessAt(s.PidFile)
+func (s *Server) StopOther(force bool) error {
+  err := stopProcessAt(s.PidFile, force)
   if err == nil {
     err = s.DeletePidFile() }
   return err

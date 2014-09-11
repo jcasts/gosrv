@@ -27,7 +27,7 @@ var DefaultAppDir     = "./"
 var DefaultAppName    = "server"
 
 
-func stopProcessAt(pid_file string) error {
+func stopProcessAt(pid_file string, force bool) error {
   _, err := os.Stat(pid_file)
   if err != nil {
     return mkerr("Could not stop server. PID file %s does not exists.", pid_file)}
@@ -47,6 +47,9 @@ func stopProcessAt(pid_file string) error {
   err = proc.Signal(os.Interrupt)
   if err != nil {
     return mkerr("Could not stop server. PID %d was unresponsive.", pid) }
+
+  if force {
+    return proc.Signal(os.Kill) }
 
   for !waitForProc(proc) {
     text := ""
@@ -70,12 +73,14 @@ func stopProcessAt(pid_file string) error {
   return nil
 }
 
+
 func fileIsTTY(file *os.File) bool {
   info, err := file.Stat()
   if err != nil { return false }
 
   return info.Mode() & os.ModeDevice == os.ModeDevice
 }
+
 
 func waitForProc(proc *os.Process) bool {
   var err error

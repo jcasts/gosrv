@@ -20,6 +20,7 @@ Usage: myserver [options]
 -d: false Run server as daemon
 -stop: false  Stop running server and exit
 -restart: false Stop running server and boot daemon
+-kill: false Force kill running server and exit
 ```
 
 
