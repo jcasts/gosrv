@@ -79,5 +79,17 @@ func main() {
 
 func handler(w http.ResponseWriter, r *http.Request) {
   w.Write([]byte("Hello World!\n"))
+
+  res := w.(*gosrv.Response)
+
+  for i := 0; i < 100; i++ {
+    // Some long running request
+    time.Sleep(50 * time.Millisecond)
+
+    // Check to see if the server is trying to shut down
+    if res.StopSignal() {
+      break
+    }
+  }
 }
 ```

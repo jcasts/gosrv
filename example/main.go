@@ -18,8 +18,14 @@ func main() {
   }
 
   s.HandleFunc("/", func(wr http.ResponseWriter, req *http.Request){
+    res := wr.(*gosrv.Response)
     wr.Write([]byte("Hello World!\n"))
-    time.Sleep(5 * time.Second)
+    for i := 0; i < 100; i++ {
+      time.Sleep(50 * time.Millisecond)
+      if res.StopSignal() {
+        break
+      }
+    }
   })
 
   err = s.ListenAndServe()

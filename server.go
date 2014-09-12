@@ -8,7 +8,6 @@ import (
   "io/ioutil"
   "time"
   "crypto/tls"
-  "sync"
   "os/signal"
 )
 
@@ -25,8 +24,6 @@ type Server struct {
   CertFile    string
   KeyFile     string
   listener    net.Listener
-  stopped     bool
-  rwlock      sync.RWMutex
   sigchan     chan os.Signal
 }
 
@@ -34,8 +31,7 @@ type Server struct {
 // Creates a new Server instance with an optional environment name.
 // The default environment is "dev".
 func New(env ...string) *Server {
-  s := &Server{PidFile: DefaultPidFile,
-    rwlock: sync.RWMutex{}, sigchan: make(chan os.Signal)}
+  s := &Server{PidFile: DefaultPidFile, sigchan: make(chan os.Signal)}
 
   if len(env) > 0 && env[0] != "" {
     s.Env = env[0]
@@ -209,8 +205,8 @@ func (s *Server) Serve(l net.Listener) error {
   err := s.prepare()
 
   if err == nil {
-    s.listener = Listener{l, s}
-    err = s.Server.Serve(s.listener)
+    s.listener = l
+    err = s.Server.Serve(l)
   }
 
   return s.finish(err)
@@ -267,11 +263,11 @@ func (s *Server) Stop() {
   }
   s.rwlock.RUnlock()
 
+  s.listener.Close()
+
   s.rwlock.Lock()
   s.Logger.Printf("Server %s stopping...\n", s.Addr)
-
   s.stopped = true
-  s.listener.Close()
   s.rwlock.Unlock()
 }
 
@@ -314,12 +310,16 @@ func (s *Server) waitForConnections() {
 
 
 func (s *Server) finish(err error) error {
-  s.rwlock.Lock()
+  s.rwlock.RLock()
+  stopped := s.stopped
+  s.rwlock.RUnlock()
 
-  if s.stopped {
+  if stopped {
     err = nil
     if s.conns != nil { s.waitForConnections() }
   }
+
+  s.rwlock.Lock()
   s.stopped = true
 
   if err != nil { s.Logger.Printf(err.Error() + "\n") }
